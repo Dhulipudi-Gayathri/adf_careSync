@@ -53,13 +53,7 @@
 				"type": "Copy",
 				"dependsOn": [
 					{
-						"activity": "Read Table Details",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					},
-					{
-						"activity": "Set Start Time",
+						"activity": "Check load type",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -77,7 +71,7 @@
 					"source": {
 						"type": "PostgreSqlV2Source",
 						"query": {
-							"value": "@concat(\n    'SELECT * FROM ',\n    activity('Read Table Details').output.firstRow.source_table_name\n)",
+							"value": "@if(equals(activity('Read Table Details').output.firstRow.load_type,'MERGE'),\nconcat('SELECT * from ',activity('Read Table Details').output.firstRow.source_table_name,' where ',activity('Read Table Details').output.firstRow.watermark_cloumn,' > ''',activity('Get watermark value').output.watermark_value,''''),concat(\n        'SELECT * FROM ',\n        activity('Read Table Details').output.firstRow.source_table_name\n    ))",
 							"type": "Expression"
 						},
 						"queryTimeout": "02:00:00"
@@ -191,6 +185,14 @@
 						"landing_time": {
 							"value": "@variables('date')",
 							"type": "Expression"
+						},
+						"load_type": {
+							"value": "@activity('Read Table Details').output.firstRow.load_type",
+							"type": "Expression"
+						},
+						"merge_key": {
+							"value": "@activity('Read Table Details').output.firstRow.merge_keys",
+							"type": "Expression"
 						}
 					}
 				},
@@ -198,12 +200,107 @@
 					"referenceName": "LS_Databricks",
 					"type": "LinkedServiceReference"
 				}
+			},
+			{
+				"name": "Update Failed Status",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "Bronze_To_Silver",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "LS_AzureSqlDatabase",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": {
+								"value": "update audit_log set status='SUCCESS',end_time=SYSUTCDATETIME(),records_written=@{activity('Bronze_To_Silver').output.runOutput} where adf_run_id='@{pipeline().parameters.adf_run_id}' and table_id=@{pipeline().parameters.table_id};",
+								"type": "Expression"
+							}
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			},
+			{
+				"name": "Check load type",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Read Table Details",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Set Start Time",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(activity('Read Table Details').output.firstRow.load_type,'MERGE')",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
+						{
+							"name": "Get watermark value",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "select watermark_value from watermark where table_id=@{activity('Read Table Details').output.firstRow.table_id}",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "DS_AzureSqlTable",
+									"type": "DatasetReference"
+								}
+							}
+						}
+					]
+				}
 			}
 		],
 		"parameters": {
 			"table_id": {
 				"type": "int",
 				"defaultValue": 14
+			},
+			"adf_run_id": {
+				"type": "string",
+				"defaultValue": "a3"
 			}
 		},
 		"variables": {
