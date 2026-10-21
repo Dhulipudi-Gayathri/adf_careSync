@@ -15,6 +15,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'LS_AzureSqlDatabase'"
 		},
+		"LS_Databricks_accessToken": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accessToken' of 'LS_Databricks'"
+		},
 		"PostgreSql1_password": {
 			"type": "secureString",
 			"metadata": "Secure string for 'password' of 'PostgreSql1'"
@@ -34,6 +38,10 @@
 		"LS_AzureSqlDatabase_properties_typeProperties_userName": {
 			"type": "string",
 			"defaultValue": "azureadmin"
+		},
+		"LS_Databricks_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "1019-174724-2s4roi3m"
 		},
 		"PostgreSql1_properties_typeProperties_server": {
 			"type": "string",
@@ -80,6 +88,9 @@
 					"LS_AzureSqlDatabase_password": {
 						"value": "[parameters('LS_AzureSqlDatabase_password')]"
 					},
+					"LS_Databricks_accessToken": {
+						"value": "[parameters('LS_Databricks_accessToken')]"
+					},
 					"PostgreSql1_password": {
 						"value": "[parameters('PostgreSql1_password')]"
 					},
@@ -94,6 +105,9 @@
 					},
 					"LS_AzureSqlDatabase_properties_typeProperties_userName": {
 						"value": "[parameters('LS_AzureSqlDatabase_properties_typeProperties_userName')]"
+					},
+					"LS_Databricks_properties_typeProperties_existingClusterId": {
+						"value": "[parameters('LS_Databricks_properties_typeProperties_existingClusterId')]"
 					},
 					"PostgreSql1_properties_typeProperties_server": {
 						"value": "[parameters('PostgreSql1_properties_typeProperties_server')]"

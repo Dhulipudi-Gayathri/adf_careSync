@@ -11,6 +11,9 @@
 		"LS_AzureSqlDatabase_password": {
 			"value": ""
 		},
+		"LS_Databricks_accessToken": {
+			"value": ""
+		},
 		"PostgreSql1_password": {
 			"value": ""
 		},
@@ -25,6 +28,9 @@
 		},
 		"LS_AzureSqlDatabase_properties_typeProperties_userName": {
 			"value": "azureadmin"
+		},
+		"LS_Databricks_properties_typeProperties_existingClusterId": {
+			"value": "1019-174724-2s4roi3m"
 		},
 		"PostgreSql1_properties_typeProperties_server": {
 			"value": "ep-frosty-term-b5acs2h9-pooler.c-7.us-east-2.aws.neon.tech"
